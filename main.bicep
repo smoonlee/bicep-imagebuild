@@ -66,7 +66,7 @@ module createAzureComputeGallery 'br/public:avm/res/compute/gallery:0.8.2' = {
         sku: '24_04-lts'
       }
       osType: 'Linux'
-      osState: 'Specialized'
+      osState: 'Generalized'
       name: 'devops-ubuntu-2404'
       hyperVGeneration: 'V2'
       securityType: 'TrustedLaunch'
