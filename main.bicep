@@ -112,14 +112,22 @@ module createBuildImageTemplate 'br/public:avm/res/virtual-machine-images/image-
         createUserManagedIdentity.outputs.resourceId
       ]
     }
-    // customizationSteps: [
-    //   {
-    //     inline: [
-    //       'sudo apt update && sudo apt dist-upgrade -y'
-    //     ]
-    //     name: 'Update System Packages'
-    //     type: 'Shell'
-    //   }
+    customizationSteps: [
+      {
+        inline: [
+          'apt update && apt dist-upgrade -y'
+        ]
+        name: 'Update System Packages'
+        type: 'Shell'
+      }
+      {
+        inline: [
+          'reboot'
+        ]
+        name: 'Reboot Sytemm'
+        type: 'Shell'
+      }
+    ]
     //   {
     //     inline: [
     //       'sudo apt-get update && sudo apt-get install -y wget apt-transport-https software-properties-common\nsource /etc/os-release\nwget -q https://packages.microsoft.com/config/ubuntu/$VERSION_ID/packages-microsoft-prod.deb\nsudo dpkg -i packages-microsoft-prod.deb  ; rm packages-microsoft-prod.deb\nsudo apt-get update ; sudo apt-get install -y powershell'
