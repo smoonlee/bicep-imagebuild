@@ -88,18 +88,22 @@ module createAzureComputeGallery 'br/public:avm/res/compute/gallery:0.8.2' = {
 module createBuildImageTemplate 'br/public:avm/res/virtual-machine-images/image-template:0.4.2' = {
   name: 'create-build-image-template'
   scope: resourceGroup(resourceGroupName)
+
   params: {
     name: 'devops-ubuntu-2404'
     location: location
+
     distributions: [
-    {
-      type: 'SharedImage'
-      sharedImageGalleryImageDefinitionResourceId: createAzureComputeGallery.outputs.imageResourceIds[0]
-      sharedImageGalleryImageDefinitionTargetVersion: '1.0.0'
-    }
+      {
+        type: 'SharedImage'
+        sharedImageGalleryImageDefinitionResourceId: createAzureComputeGallery.outputs.imageResourceIds[0]
+        sharedImageGalleryImageDefinitionTargetVersion: '1.0.0'
+      }
     ]
+
     osDiskSizeGB: 127
     vmSize: 'Standard_B2s'
+
     imageSource: {
       offer: 'ubuntu-24_04-lts'
       publisher: 'canonical'
@@ -107,51 +111,66 @@ module createBuildImageTemplate 'br/public:avm/res/virtual-machine-images/image-
       type: 'PlatformImage'
       version: 'latest'
     }
+
     managedIdentities: {
       userAssignedResourceIds: [
         createUserManagedIdentity.outputs.resourceId
       ]
     }
+
     customizationSteps: [
       {
-        inline: [
-          'apt update && apt dist-upgrade -y'
-        ]
         name: 'Update System Packages'
         type: 'Shell'
+        inline: [
+          'sudo apt update'
+          'sudo apt dist-upgrade -y'
+        ]
       }
       {
+        name: 'Reboot System'
+        type: 'Shell'
         inline: [
           'reboot'
         ]
-        name: 'Reboot Sytemm'
+      }
+      {
+        name: 'Install PowerShell'
         type: 'Shell'
+        inline: [
+          'wget -q https://packages.microsoft.com/config/ubuntu/24.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb'
+          'sudo dpkg -i packages-microsoft-prod.deb && rm packages-microsoft-prod.deb'
+          'sudo apt update && sudo apt install -y powershell'
+        ]
+      }
+      {
+        name: 'Install Azure CLI'
+        type: 'Shell'
+        inline: [
+          'curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash'
+        ]
+      }
+      {
+        name: 'Install Azure Bicep'
+        type: 'Shell'
+        inline: [
+          'az bicep install'
+        ]
+      }
+      {
+        name: 'Install AzCopy'
+        type: 'Shell'
+        inline: [
+          'wget -q https://packages.microsoft.com/config/ubuntu/24.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb'
+          'sudo dpkg -i packages-microsoft-prod.deb'
+          'rm packages-microsoft-prod.deb'
+          'sudo apt update'
+          'sudo apt install -y azcopy'
+        ]
       }
     ]
-    //   {
-    //     inline: [
-    //       'sudo apt-get update && sudo apt-get install -y wget apt-transport-https software-properties-common\nsource /etc/os-release\nwget -q https://packages.microsoft.com/config/ubuntu/$VERSION_ID/packages-microsoft-prod.deb\nsudo dpkg -i packages-microsoft-prod.deb  ; rm packages-microsoft-prod.deb\nsudo apt-get update ; sudo apt-get install -y powershell'
-    //     ]
-    //     name: 'Install PowerShell 7'
-    //     type: 'Shell'
-    //   }
-    //   {
-    //     inline: [
-    //       'curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash'
-    //     ]
-    //     name: 'Install Azure CLI'
-    //     type: 'Shell'
-    //   }
-    //   {
-    //     inline: [
-    //       '# Extract distribution and version from /etc/os-release\nDISTRO=$(grep ^ID= /etc/os-release | cut -d= -f2 | tr -d \'"\')\nVERSION=$(grep ^VERSION_ID= /etc/os-release | cut -d= -f2 | tr -d \'"\')\n\n# Use the extracted values in the curl command\ncurl -sSL -O https://packages.microsoft.com/config/$DISTRO/$VERSION/packages-microsoft-prod.deb\nsudo dpkg -i packages-microsoft-prod.deb ; rm packages-microsoft-prod.deb\nsudo apt-get update; sudo apt-get install azcopy\n'
-    //     ]
-    //     name: 'Install AzCopy'
-    //     type: 'Shell'
-    //   }
-    // ]
-    
   }
+
   dependsOn: [
     createAzureComputeGallery
   ]
